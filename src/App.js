@@ -8,7 +8,8 @@ import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import About from './components/About/About';
 import Form from './components/Form/Form';
 import Favorites from './components/Favorite/Favorite';
-
+import { useDispatch } from 'react-redux';
+import { addCharacter, addLocation } from './Redux/Action/Actions';
 
 
 
@@ -24,6 +25,11 @@ function App() {
   const [characters, setCharacters] = useState([]);
   const [access, setAccess] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(addLocation(location.pathname))
+  },  [location])
+  
 
 
   const login = (userData) => {
@@ -39,16 +45,41 @@ if (userData.email === email && userData.password === password){
     !access && navigate('/')
   },  [access])
   
-
+  useEffect(() => {
+    const request = [];
+    for (let num = 32; num < 42; num++) {
+      request.push(
+        axios.get(`https://rickandmortyapi.com/api/character?page=${num}`)
+      );
+    }
+      Promise.all(request)
+      .then((results) => {
+        //console.log(":::")
+        let newCharacters = [];
+        results.map((
+          chars) => (newCharacters = [...newCharacters, ...chars.data.results])
+        );
+        console.log(":::", newCharacters);
+        setCharacters([...newCharacters]);
+        dispatch(addCharacter(newCharacters))
+        })
+        .catch((error) => {});
+      }, []); 
   const onSearch = (id) => {
     axios (`https://rickandmortyapi.com/api/character/${id}`)
-      .then(response => response.data)
-      .then((data) => { 
+     
+      .then(({data}) => { 
         if (data.name) {
+          let exist = characters.find((character) => character.id === data.id);
+          if (exist){
+            alert ("Ya existe!");
+          }  else {
           setCharacters((oldChars) => [...oldChars, data]);
-        } else {
+          dispatch(addCharacter(data))
+        }} else {
           window.alert('¡No hay personajes con este ID!');
         }
+      
       });
   }
   const onClose = (id) => {
@@ -66,7 +97,7 @@ if (userData.email === email && userData.password === password){
       }
       <Routes>
         <Route path='/' element={ <Form login={login} />} />
-        <Route path='/home' element={ <Container characters={characters} onClose={onClose} />} />
+        <Route path='/home' element={ <Container onClose={onClose} />} />
         <Route path='/about' element={ <About />} />
         <Route path='/favorites' element={ <Favorites onClose={onClose} />} />
         <Route path='/detail/:id' element={ <Detail />} />
@@ -75,6 +106,4 @@ if (userData.email === email && userData.password === password){
     </div>
   );
 }
-
-
 export default App;
