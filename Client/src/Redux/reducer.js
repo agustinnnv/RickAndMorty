@@ -1,8 +1,9 @@
-import { ADD_FAV, REMOVE_FAV, FILTER, ORDER, RESET, ADD_CHARACTER, REMOVE_CHARACTER, NEXT_PAGE, PREV_PAGE, ADD_LOCATION } from './Action/types';
+import { ADD_FAV, REMOVE_FAV, FILTER, ORDER, RESET, ADD_CHARACTER, REMOVE_CHARACTER, NEXT_PAGE, PREV_PAGE, ADD_LOCATION, SEARCH_CHARACTER, RESET_CHARACTER, HANDLE_NUMBER } from './Action/types';
 
 const initialState = {
     location:[],
     numPage: 1,
+    charactersOrigin: [],
     characters: [],
     myFavorites: [],
     myFavoritesOrigin: []
@@ -24,11 +25,22 @@ export default function rootReducer(state = initialState, { type, payload }) {
                     ...state,
                     numPage: state.numPage + 1,
                 }
+        case SEARCH_CHARACTER:
+                return {
+                    ...state,
+                     characters: [payload],
+                }
+        case RESET_CHARACTER:
+                    return {
+                        ...state,
+                         characters: [...state.charactersOrigin],
+                    }
 
         case ADD_CHARACTER:
             if (Array.isArray(payload)) {
                 return {
                     ...state,
+                    charactersOrigin: [...state.characters, ...payload],
                     characters: [...state.characters, ...payload],
                 }
             }
@@ -73,6 +85,11 @@ export default function rootReducer(state = initialState, { type, payload }) {
                 ...state,
                 myFavorites: [...state.myFavoritesOrigin],
             }
+        case HANDLE_NUMBER:
+                return {
+                    ...state,
+                    numPage: payload,
+                }
         case ORDER:
             const newOrder = state.myFavoritesOrigin.sort((a, b) => {
 
